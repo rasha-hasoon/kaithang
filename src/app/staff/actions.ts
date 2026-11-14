@@ -12,10 +12,20 @@ const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").repla
 // ---------------- Auth ----------------
 export async function staffLogin(formData: FormData) {
   const supa = await authClient();
-  const { error } = await supa.auth.signInWithPassword({ email: str(formData, "email"), password: str(formData, "password") });
-  if (error) redirect("/staff/login?err=1");
-  const staff = await getStaff();
-  redirect(staff?.role === "admin" ? "/admin" : "/unit");
+  const next = str(formData, "next");
+  const safeNext = next.startsWith("/unit") || next.startsWith("/admin") ? next : "";
+  const { data, error } = await supa.auth.signInWithPassword({ email: str(formData, "email"), password: str(formData, "password") });
+  if (error || !data.user) redirect(`/staff/login?err=${encodeURIComponent(error?.message ?? "login")}${safeNext ? `&next=${encodeURIComponent(safeNext)}` : ""}`);
+  // Read the profile with the user id we just got (the new session cookie isn't readable until the next request).
+  const s = db();
+  let { data: p } = await s.from("profiles").select("role,unit_id").eq("id", data.user.id).maybeSingle();
+  if (!p) {
+    await s.from("profiles").insert({ id: data.user.id, email: data.user.email, name: data.user.email?.split("@")[0] });
+    p = { role: "unit", unit_id: null };
+  }
+  if (p.role === "admin") redirect(safeNext.startsWith("/admin") ? safeNext : "/admin");
+  if (!p.unit_id) redirect("/staff/login?err=nounit");
+  redirect(safeNext.startsWith("/unit") ? safeNext : "/unit");
 }
 
 export async function staffLogout() {
