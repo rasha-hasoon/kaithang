@@ -1,138 +1,197 @@
 -- =============================================================
--- Kaithang — demo seed data (all people, hospitals and accounts are FICTIONAL)
--- Run AFTER schema.sql.  Re-runnable: wipes demo rows first.
+-- Samhari v2, SAMPLE data for the demo (units, people and money are fictional)
+-- Run AFTER schema.sql. Re-runnable.
 -- =============================================================
-truncate case_updates, payouts, allocations, donations, subscriptions,
-         verifications, case_documents, cases, hospitals restart identity cascade;
+truncate report_items, reports, disbursements, contributions, subscriptions, donors, unit_needs;
+delete from units;  -- (delete, not truncate, so staff profiles survive a re-seed)
+select setseed(0.27);
 
-select setseed(0.42);
+-- ---------- Units ----------
+insert into units (id, slug, name, name_ml, kind, district, panchayat, about_en, about_ml, phone,
+                   patients_registered, home_visits_month, nurses, volunteers,
+                   bank_account_name, bank_account_last4, ifsc, status, is_sample, approved_at, created_at) values
+('a0000000-0000-0000-0000-000000000001', 'mukkam-community-palliative', 'Mukkam Community Palliative Care', 'മുക്കം കമ്മ്യൂണിറ്റി പാലിയേറ്റീവ് കെയർ',
+ 'community', 'Kozhikode', 'Mukkam Municipality',
+ 'A volunteer-run home care unit serving bedridden patients across Mukkam. Nurses and trained volunteers visit every patient at least twice a month, bring medicines and consumables, and support families with food kits.',
+ 'മുക്കത്തെ കിടപ്പുരോഗികൾക്കായി സന്നദ്ധപ്രവർത്തകർ നടത്തുന്ന ഹോം കെയർ യൂണിറ്റ്. നഴ്സുമാരും പരിശീലനം ലഭിച്ച വളണ്ടിയർമാരും എല്ലാ രോഗികളെയും മാസത്തിൽ രണ്ടുതവണയെങ്കിലും സന്ദർശിച്ച് മരുന്നും അവശ്യവസ്തുക്കളും എത്തിക്കുന്നു.',
+ '+91 90000 00001', 186, 420, 4, 65, 'MUKKAM COMMUNITY PALLIATIVE', '3381', 'DEMO0000101', 'approved', true, now() - interval '200 days', now() - interval '210 days'),
+('a0000000-0000-0000-0000-000000000002', 'kodiyathur-home-care', 'Kodiyathur Panchayat Palliative Home Care', 'കൊടിയത്തൂർ പഞ്ചായത്ത് പാലിയേറ്റീവ് ഹോം കെയർ',
+ 'government', 'Kozhikode', 'Kodiyathur',
+ 'The panchayat''s primary palliative unit, attached to the Family Health Centre. A nurse-led team visits bedridden and elderly patients, supported by ASHA workers and local volunteers.',
+ 'കുടുംബാരോഗ്യ കേന്ദ്രത്തോട് ചേർന്ന പഞ്ചായത്തിന്റെ പ്രാഥമിക പാലിയേറ്റീവ് യൂണിറ്റ്. ആശാ പ്രവർത്തകരുടെയും വളണ്ടിയർമാരുടെയും സഹായത്തോടെ നഴ്സിന്റെ നേതൃത്വത്തിലുള്ള സംഘം വീടുകൾ സന്ദർശിക്കുന്നു.',
+ '+91 90000 00002', 142, 300, 2, 40, 'KODIYATHUR PALLIATIVE UNIT', '5520', 'DEMO0000102', 'approved', true, now() - interval '190 days', now() - interval '195 days'),
+('a0000000-0000-0000-0000-000000000003', 'karassery-snehasparsham', 'Snehasparsham Palliative Centre, Karassery', 'സ്നേഹസ്പർശം പാലിയേറ്റീവ് സെന്റർ, കാരശ്ശേരി',
+ 'private', 'Kozhikode', 'Karassery',
+ 'A small private centre with an outpatient clinic and a home care van. Focuses on cancer patients and people with spinal injuries.',
+ 'ഔട്ട്‌പേഷ്യന്റ് ക്ലിനിക്കും ഹോം കെയർ വാനുമുള്ള ചെറിയ സ്വകാര്യ കേന്ദ്രം. കാൻസർ രോഗികൾക്കും നട്ടെല്ലിന് പരിക്കേറ്റവർക്കും പ്രത്യേക ശ്രദ്ധ.',
+ '+91 90000 00003', 98, 210, 3, 28, 'SNEHASPARSHAM PALLIATIVE', '7714', 'DEMO0000103', 'approved', true, now() - interval '170 days', now() - interval '175 days'),
+('a0000000-0000-0000-0000-000000000004', 'thamarassery-pain-palliative', 'Thamarassery Pain & Palliative Clinic', 'താമരശ്ശേരി പെയിൻ & പാലിയേറ്റീവ് ക്ലിനിക്',
+ 'community', 'Kozhikode', 'Thamarassery',
+ 'One of the larger community clinics in the region, running a daily OP clinic, two home care teams and a medical equipment lending library.',
+ 'ദിവസേനയുള്ള ഒപി ക്ലിനിക്, രണ്ട് ഹോം കെയർ ടീമുകൾ, മെഡിക്കൽ ഉപകരണങ്ങൾ വായ്പ നൽകുന്ന ലൈബ്രറി എന്നിവയുള്ള പ്രദേശത്തെ വലിയ കമ്മ്യൂണിറ്റി ക്ലിനിക്കുകളിലൊന്ന്.',
+ '+91 90000 00004', 230, 510, 5, 90, 'THAMARASSERY PAIN PALLIATIVE', '2096', 'DEMO0000104', 'approved', true, now() - interval '185 days', now() - interval '190 days'),
+('a0000000-0000-0000-0000-000000000005', 'kondotty-neighbourhood', 'Kondotty Neighbourhood Palliative Network', 'കൊണ്ടോട്ടി നെയ്ബർഹുഡ് പാലിയേറ്റീവ് നെറ്റ്‌വർക്ക്',
+ 'community', 'Malappuram', 'Kondotty',
+ 'A neighbourhood network of trained volunteers in every ward, backed by two nurses and a visiting doctor every week.',
+ 'എല്ലാ വാർഡിലും പരിശീലനം ലഭിച്ച വളണ്ടിയർമാരുടെ ശൃംഖല; രണ്ട് നഴ്സുമാരും ആഴ്ചതോറും സന്ദർശിക്കുന്ന ഡോക്ടറും പിന്തുണയ്ക്കുന്നു.',
+ '+91 90000 00005', 175, 390, 4, 72, 'KONDOTTY NEIGHBOURHOOD PALLIATIVE', '4458', 'DEMO0000105', 'approved', true, now() - interval '160 days', now() - interval '165 days'),
+('a0000000-0000-0000-0000-000000000006', 'omassery-palliative-society', 'Omassery Palliative Care Society', 'ഓമശ്ശേരി പാലിയേറ്റീവ് കെയർ സൊസൈറ്റി',
+ 'private', 'Kozhikode', 'Omassery',
+ 'Newly applied unit awaiting verification.', 'പുതുതായി അപേക്ഷിച്ച യൂണിറ്റ്. പരിശോധന കാത്തിരിക്കുന്നു.',
+ '+91 90000 00006', 64, 120, 1, 20, 'OMASSERY PALLIATIVE SOCIETY', '9902', 'DEMO0000106', 'pending', true, null, now() - interval '1 day');
 
--- ---------- Hospitals ----------
-insert into hospitals (id, name, district, account_name, account_no_last4, ifsc) values
- ('11111111-0000-0000-0000-000000000001', 'Malabar Demo Medical Centre', 'Malappuram', 'MALABAR DEMO MEDICAL CENTRE', '4821', 'DEMO0001234'),
- ('11111111-0000-0000-0000-000000000002', 'Kottayam Demo Kidney Institute', 'Kottayam', 'KOTTAYAM DEMO KIDNEY INST', '7710', 'DEMO0005678'),
- ('11111111-0000-0000-0000-000000000003', 'Thrissur Demo Mother & Child Hospital', 'Thrissur', 'THRISSUR DEMO MCH', '3392', 'DEMO0009012'),
- ('11111111-0000-0000-0000-000000000004', 'Alappuzha Demo Cancer Care', 'Alappuzha', 'ALAPPUZHA DEMO CANCER CARE', '1189', 'DEMO0003456'),
- ('11111111-0000-0000-0000-000000000005', 'Kozhikode Demo Trauma Centre', 'Kozhikode', 'KOZHIKODE DEMO TRAUMA', '6604', 'DEMO0007890');
+-- ---------- More sample units: at least 2 in every district ----------
+insert into units (slug, name, kind, district, panchayat, about_en, about_ml, phone,
+                   patients_registered, home_visits_month, nurses, volunteers,
+                   bank_account_name, bank_account_last4, ifsc, status, is_sample, approved_at, created_at)
+select lower(regexp_replace(v.name, '[^A-Za-z0-9]+', '-', 'g')), v.name, v.kind::unit_kind, v.district, v.place,
+       'A palliative home care unit serving bedridden and elderly patients in and around ' || v.place || '. Nurses and trained volunteers visit patients at home, bring medicines and consumables, and support families.',
+       v.place || ' പ്രദേശത്തെ കിടപ്പുരോഗികൾക്കും വയോജനങ്ങൾക്കും വീടുകളിൽ പരിചരണം നൽകുന്ന പാലിയേറ്റീവ് യൂണിറ്റ്. നഴ്സുമാരും വളണ്ടിയർമാരും വീടുകൾ സന്ദർശിച്ച് മരുന്നും അവശ്യവസ്തുക്കളും എത്തിക്കുന്നു.',
+       '+91 90000 0' || lpad(row_number() over ()::text, 4, '0'),
+       60 + floor(random()*180)::int, 120 + floor(random()*380)::int, 1 + floor(random()*4)::int, 15 + floor(random()*70)::int,
+       upper(v.name), lpad(floor(random()*9999)::text, 4, '0'), 'DEMO0000' || lpad(row_number() over ()::text, 3, '0'),
+       'approved', true, now() - interval '200 days', now() - interval '205 days'
+from (values
+  ('Neyyattinkara Home Care Palliative Unit', 'government', 'Thiruvananthapuram', 'Neyyattinkara'),
+  ('Attingal Community Palliative Society', 'community', 'Thiruvananthapuram', 'Attingal'),
+  ('Karunagappally Pain & Palliative Clinic', 'community', 'Kollam', 'Karunagappally'),
+  ('Punalur Panchayat Palliative Home Care', 'government', 'Kollam', 'Punalur'),
+  ('Adoor Palliative Home Care', 'government', 'Pathanamthitta', 'Adoor'),
+  ('Ranni Karuna Palliative Unit', 'private', 'Pathanamthitta', 'Ranni'),
+  ('Cherthala Pain & Palliative Society', 'community', 'Alappuzha', 'Cherthala'),
+  ('Haripad Community Home Care', 'community', 'Alappuzha', 'Haripad'),
+  ('Pala Palliative Care Centre', 'private', 'Kottayam', 'Pala'),
+  ('Changanassery Home Care Palliative', 'government', 'Kottayam', 'Changanassery'),
+  ('Thodupuzha Palliative Care Society', 'community', 'Idukki', 'Thodupuzha'),
+  ('Kattappana High Range Palliative Unit', 'community', 'Idukki', 'Kattappana'),
+  ('Aluva Pain & Palliative Clinic', 'community', 'Ernakulam', 'Aluva'),
+  ('Perumbavoor Panchayat Palliative Care', 'government', 'Ernakulam', 'Perumbavoor'),
+  ('Chalakudy Palliative Home Care', 'government', 'Thrissur', 'Chalakudy'),
+  ('Kodungallur Karunya Palliative Society', 'private', 'Thrissur', 'Kodungallur'),
+  ('Ottapalam Pain & Palliative Clinic', 'community', 'Palakkad', 'Ottapalam'),
+  ('Mannarkkad Community Palliative Care', 'community', 'Palakkad', 'Mannarkkad'),
+  ('Tirur Palliative Home Care', 'government', 'Malappuram', 'Tirur'),
+  ('Mananthavady Palliative Care Society', 'community', 'Wayanad', 'Mananthavady'),
+  ('Sulthan Bathery Home Care Unit', 'government', 'Wayanad', 'Sulthan Bathery'),
+  ('Thalassery Pain & Palliative Clinic', 'community', 'Kannur', 'Thalassery'),
+  ('Payyanur Community Palliative Care', 'private', 'Kannur', 'Payyanur'),
+  ('Kanhangad Palliative Home Care', 'government', 'Kasaragod', 'Kanhangad'),
+  ('Nileshwar Community Palliative Unit', 'community', 'Kasaragod', 'Nileshwar')
+) as v(name, kind, district, place);
 
--- ---------- Cases ----------
-insert into cases (id, slug, patient_name, age, district, condition_en, condition_ml, title_en, title_ml,
-                   story_en, story_ml, goal_amount, hospital_id, urgency, deadline, status, creator_name, published_at, created_at) values
-('22222222-0000-0000-0000-000000000001', 'amina-heart-surgery', 'Amina', 14, 'Malappuram',
- 'Atrial septal defect (hole in the heart)', 'ഹൃദയത്തിലെ ദ്വാരം (ASD)',
- '14-year-old Amina needs urgent heart surgery',
- '14 വയസ്സുള്ള ആമിനയ്ക്ക് അടിയന്തര ഹൃദയ ശസ്ത്രക്രിയ വേണം',
- 'Amina, a Class 9 student from Malappuram, was born with a hole in her heart. She gets breathless climbing stairs and has missed months of school. Doctors say she needs ASD closure surgery within weeks. Her father is a daily-wage worker earning about ₹15,000 a month, and the family is not covered by any scheme that pays in time. Two ASHA workers visited the home and verified the family''s details. Every rupee goes directly to the hospital.',
- 'മലപ്പുറം സ്വദേശിയായ ഒൻപതാം ക്ലാസ് വിദ്യാർത്ഥിനി ആമിനയ്ക്ക് ജന്മനാ ഹൃദയത്തിൽ ദ്വാരമുണ്ട്. പടികൾ കയറുമ്പോൾ ശ്വാസംമുട്ടുന്നു, മാസങ്ങളായി സ്കൂളിൽ പോകാനാവുന്നില്ല. ആഴ്ചകൾക്കുള്ളിൽ ശസ്ത്രക്രിയ നടത്തണമെന്ന് ഡോക്ടർമാർ പറയുന്നു. ദിവസക്കൂലിക്കാരനായ പിതാവിന് 4 ലക്ഷം രൂപ കണ്ടെത്താനാവുന്നില്ല. രണ്ട് ആശാ പ്രവർത്തകർ വീട് സന്ദർശിച്ച് വിവരങ്ങൾ സ്ഥിരീകരിച്ചിട്ടുണ്ട്. തുക മുഴുവൻ നേരിട്ട് ആശുപത്രിയിലേക്കാണ് പോകുന്നത്.',
- 400000, '11111111-0000-0000-0000-000000000001', 3, current_date + 14, 'live', 'Ignite Foundation', now() - interval '6 days', now() - interval '9 days'),
+-- ---------- Current needs ----------
+insert into unit_needs (unit_id, title_en, title_ml, category, qty_needed, qty_fulfilled, cost_per_item)
+select u.id, n.t_en, n.t_ml, n.cat::spend_category, n.need + floor(random()*4)::int, floor(random()*n.need)::int, n.cost
+from units u
+cross join (values
+  ('Water beds for bedridden patients', 'കിടപ്പുരോഗികൾക്ക് വാട്ടർ ബെഡ്', 'equipment', 6, 4500),
+  ('Wheelchairs', 'വീൽചെയറുകൾ', 'equipment', 3, 7000),
+  ('Adult diaper packs (monthly)', 'മുതിർന്നവർക്കുള്ള ഡയപ്പർ പാക്കുകൾ (പ്രതിമാസം)', 'consumables', 40, 450),
+  ('Monthly food kits for families', 'കുടുംബങ്ങൾക്ക് പ്രതിമാസ ഭക്ഷ്യകിറ്റ്', 'family_support', 25, 1200),
+  ('Oxygen concentrator', 'ഓക്സിജൻ കോൺസെൻട്രേറ്റർ', 'equipment', 1, 45000)
+) as n(t_en, t_ml, cat, need, cost)
+where u.status = 'approved';
 
-('22222222-0000-0000-0000-000000000002', 'rahul-kidney-transplant', 'Rahul', 32, 'Kottayam',
- 'End-stage kidney failure', 'വൃക്ക തകരാർ',
- 'Auto driver Rahul needs a kidney transplant',
- 'ഓട്ടോ ഡ്രൈവറായ രാഹുലിന് വൃക്ക മാറ്റിവയ്ക്കൽ ശസ്ത്രക്രിയ',
- 'Rahul, 32, drives an auto-rickshaw in Kottayam and supports his wife and two children. Both his kidneys have failed and he is on dialysis three times a week. His mother is ready to donate a kidney, but the transplant costs ₹8 lakh. The family has already sold their gold to pay for dialysis.',
- 'കോട്ടയത്ത് ഓട്ടോ ഓടിക്കുന്ന 32 വയസ്സുള്ള രാഹുലിന്റെ രണ്ട് വൃക്കകളും തകരാറിലാണ്. ആഴ്ചയിൽ മൂന്ന് തവണ ഡയാലിസിസ് ചെയ്യുന്നു. അമ്മ വൃക്ക നൽകാൻ തയ്യാറാണ്, പക്ഷേ ശസ്ത്രക്രിയയ്ക്ക് 8 ലക്ഷം രൂപ വേണം. ഡയാലിസിസിനായി കുടുംബം ഇതിനകം സ്വർണം വിറ്റുകഴിഞ്ഞു.',
- 800000, '11111111-0000-0000-0000-000000000002', 2, current_date + 30, 'live', 'Ignite Foundation', now() - interval '3 days', now() - interval '7 days'),
-
-('22222222-0000-0000-0000-000000000003', 'baby-of-sreeja-nicu', 'Baby of Sreeja', 0, 'Thrissur',
- 'Premature birth — NICU care', 'മാസം തികയാതെയുള്ള ജനനം — NICU ചികിത്സ',
- 'Newborn needed 3 weeks of NICU care',
- 'നവജാത ശിശുവിന് മൂന്നാഴ്ചത്തെ NICU ചികിത്സ',
- 'Born at 29 weeks in Thrissur, Sreeja''s baby needed three weeks in the NICU. The Kaithang pool funded the full amount within 48 hours of verification, paid directly to the hospital. Mother and baby are now home.',
- 'തൃശ്ശൂരിൽ 29-ാം ആഴ്ചയിൽ ജനിച്ച ശ്രീജയുടെ കുഞ്ഞിന് മൂന്നാഴ്ച NICU ചികിത്സ ആവശ്യമായിരുന്നു. സ്ഥിരീകരണം കഴിഞ്ഞ് 48 മണിക്കൂറിനുള്ളിൽ കൈത്താങ്ങ് പൂളിൽ നിന്ന് മുഴുവൻ തുകയും നേരിട്ട് ആശുപത്രിയിലേക്ക് നൽകി. അമ്മയും കുഞ്ഞും ഇപ്പോൾ വീട്ടിലാണ്.',
- 250000, '11111111-0000-0000-0000-000000000003', 3, current_date - 10, 'paid', 'Ignite Foundation', now() - interval '20 days', now() - interval '22 days'),
-
-('22222222-0000-0000-0000-000000000004', 'joseph-chemotherapy', 'Joseph', 58, 'Alappuzha',
- 'Colon cancer — chemotherapy', 'വൻകുടൽ കാൻസർ — കീമോതെറാപ്പി',
- 'Fisherman Joseph needs 6 cycles of chemotherapy',
- 'മത്സ്യത്തൊഴിലാളിയായ ജോസഫിന് കീമോതെറാപ്പി',
- 'Joseph, 58, is a fisherman from Alappuzha. He has been diagnosed with colon cancer and needs six cycles of chemotherapy after surgery.',
- 'ആലപ്പുഴയിലെ മത്സ്യത്തൊഴിലാളിയായ ജോസഫിന് (58) വൻകുടൽ കാൻസർ സ്ഥിരീകരിച്ചു. ശസ്ത്രക്രിയയ്ക്ക് ശേഷം ആറ് ഘട്ട കീമോതെറാപ്പി ആവശ്യമാണ്.',
- 300000, '11111111-0000-0000-0000-000000000004', 2, current_date + 21, 'submitted', 'Mary Joseph (wife)', null, now() - interval '1 day'),
-
-('22222222-0000-0000-0000-000000000005', 'fathima-accident-surgery', 'Fathima', 22, 'Kozhikode',
- 'Compound leg fracture after road accident', 'റോഡപകടത്തിൽ കാലിന് ഗുരുതര ഒടിവ്',
- 'Fathima needs surgery after a road accident',
- 'അപകടത്തിൽ പരിക്കേറ്റ ഫാത്തിമയ്ക്ക് ശസ്ത്രക്രിയ',
- 'Fathima, 22, a nursing student from Kozhikode, suffered a compound fracture of her leg in a road accident and needs surgery with an implant.',
- 'കോഴിക്കോട് സ്വദേശിയായ നഴ്സിംഗ് വിദ്യാർത്ഥിനി ഫാത്തിമയ്ക്ക് (22) റോഡപകടത്തിൽ കാലിന് ഗുരുതര ഒടിവ് സംഭവിച്ചു. ഇംപ്ലാന്റോടു കൂടിയ ശസ്ത്രക്രിയ ആവശ്യമാണ്.',
- 180000, '11111111-0000-0000-0000-000000000005', 3, current_date + 7, 'submitted', 'Abdul Rasheed (father)', null, now() - interval '5 hours');
-
--- ---------- Documents (labels only; files are added later via the app) ----------
-insert into case_documents (case_id, type, path, label, is_public) values
- ('22222222-0000-0000-0000-000000000001', 'medical_estimate', 'demo/amina-estimate.pdf', 'Hospital cost estimate — ₹4,00,000', true),
- ('22222222-0000-0000-0000-000000000001', 'income_cert',      'demo/amina-income.pdf',   'Income certificate (Village Office)', false),
- ('22222222-0000-0000-0000-000000000001', 'id_proof',         'demo/amina-id.pdf',       'Father''s Aadhaar (masked)', false),
- ('22222222-0000-0000-0000-000000000002', 'medical_estimate', 'demo/rahul-estimate.pdf', 'Transplant estimate — ₹8,00,000', true),
- ('22222222-0000-0000-0000-000000000003', 'medical_estimate', 'demo/sreeja-estimate.pdf','NICU estimate — ₹2,50,000', true);
-
--- ---------- Pool subscribers (~1,200) ----------
-insert into subscriptions (donor_name, phone, amount, interval, status, created_at)
-select (array['Arjun','Meera','Anu','Fahad','Nikhil','Sneha','Jithin','Aswathy','Rahim','Divya','Joel','Shabna','Vishnu','Neha','Akhil','Ameena'])[1 + floor(random()*16)::int]
+-- ---------- Donors (≈2,400) + one demo donor you can log in as: 9999999999 / OTP 123456 ----------
+insert into donors (phone, name, district, show_name, created_at)
+select '9' || lpad((floor(random()*999999999))::text, 9, '0'),
+       (array['Arjun','Meera','Anu','Fahad','Nikhil','Sneha','Jithin','Aswathy','Rahim','Divya','Joel','Shabna','Vishnu','Neha','Akhil','Ameena','Hrishikesh','Fathima','Sreelakshmi','Basil'])[1 + floor(random()*20)::int]
          || ' ' || (array['K','M','P','R','S','T','V','N'])[1 + floor(random()*8)::int],
-       '9' || lpad((floor(random()*999999999))::text, 9, '0'),
-       (array[1,1,1,5,10,10,10,20,50,100])[1 + floor(random()*10)::int],
-       (case when random() < 0.6 then 'weekly' else 'monthly' end)::sub_interval,
-       'active',
-       now() - (random() * interval '60 days')
-from generate_series(1, 1200);
+       (array['Kozhikode','Kozhikode','Kozhikode','Malappuram','Malappuram','Ernakulam','Thrissur','Kannur','Dubai','Bengaluru'])[1 + floor(random()*10)::int],
+       random() > 0.2,
+       now() - interval '200 days'
+from generate_series(1, 4000)
+on conflict (phone) do nothing;
 
--- ---------- Pool income: subscription charges + one-off pool gifts (≈ ₹5.6 lakh) ----------
-insert into donations (case_id, donor_name, phone, amount, kind, status, created_at, rzp_payment_id)
-select null,
-       s.donor_name, s.phone, s.amount * (1 + floor(random()*8)::int),   -- several weeks of charges
-       'sub_charge', 'captured', now() - (random() * interval '45 days'),
-       'pay_seed_sub_' || row_number() over ()
-from subscriptions s;
+insert into donors (id, phone, name, district, created_at)
+values ('d0000000-0000-0000-0000-000000000001', '9999999999', 'Demo Donor', 'Kozhikode', now() - interval '150 days');
 
-insert into donations (case_id, donor_name, phone, amount, kind, status, created_at, rzp_payment_id)
-select null, 'Well-wisher', null, (array[100,250,500,1000,2000,5000])[1 + floor(random()*6)::int],
-       'one_time', 'captured', now() - (random() * interval '45 days'), 'pay_seed_pool_' || g
-from generate_series(1, 500) g;
+-- ---------- Subscriptions (~3,200) ----------
+insert into subscriptions (donor_id, unit_id, weekly_amount, frequency, charge_amount, status, started_at)
+select d.id, u.id, w.weekly, f.freq, charge_for(w.weekly, f.freq),
+       (case when random() < 0.92 then 'active' else 'cancelled' end)::sub_status,
+       now() - (random() * interval '205 days')
+from donors d
+cross join lateral (select id from units where status = 'approved' order by random() + 0 * length(d.id::text) limit (1 + (random() < 0.35)::int)) u
+cross join lateral (select (array[3,3,3,3,5,5,10,10,20,50])[1 + floor(random()*10 + 0*length(d.id::text))::int] as weekly) w
+cross join lateral (select (case when random() + 0*length(d.id::text) < 0.75 then 'monthly' when random() < 0.7 then 'quarterly' else 'yearly' end)::sub_frequency as freq) f
+where d.phone <> '9999999999';
 
--- ---------- Direct gifts to live cases ----------
-insert into donations (case_id, donor_name, phone, amount, kind, status, created_at, rzp_payment_id, is_anonymous)
-select '22222222-0000-0000-0000-000000000001',
-       (array['Arjun','Meera','Anu','Fahad','Nikhil','Sneha','Jithin','Aswathy','Rahim','Divya'])[1 + floor(random()*10)::int] || ' ' || (array['K','M','P','R','S'])[1 + floor(random()*5)::int],
-       null, (array[10,50,100,100,200,500,500,1000,2000])[1 + floor(random()*9)::int],
-       'one_time', 'captured', now() - (random() * interval '6 days'), 'pay_seed_amina_' || g, random() < 0.15
-from generate_series(1, 260) g;
+insert into subscriptions (donor_id, unit_id, weekly_amount, frequency, charge_amount, status, started_at) values
+ ('d0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 3,  'monthly',   13, 'active', now() - interval '150 days'),
+ ('d0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000004', 10, 'quarterly', 130, 'active', now() - interval '120 days');
 
-insert into donations (case_id, donor_name, phone, amount, kind, status, created_at, rzp_payment_id, is_anonymous)
-select '22222222-0000-0000-0000-000000000002',
-       (array['Joel','Shabna','Vishnu','Neha','Akhil','Ameena','Tom','Reshma'])[1 + floor(random()*8)::int] || ' ' || (array['K','M','P','R','S'])[1 + floor(random()*5)::int],
-       null, (array[50,100,200,500,1000,2000,5000])[1 + floor(random()*7)::int],
-       'one_time', 'captured', now() - (random() * interval '3 days'), 'pay_seed_rahul_' || g, random() < 0.15
-from generate_series(1, 180) g;
+update subscriptions set next_charge_on = (
+  started_at + (case frequency when 'monthly' then interval '1 month' when 'quarterly' then interval '3 months' else interval '1 year' end)
+    * (floor(extract(epoch from now() - started_at) /
+             extract(epoch from case frequency when 'monthly' then interval '30 days' when 'quarterly' then interval '91 days' else interval '365 days' end)) + 1)
+)::date
+where status = 'active';
+update subscriptions set cancelled_at = least(started_at + interval '40 days', now() - interval '1 day') where status = 'cancelled';
 
--- ---------- Committee allocations from the pool ----------
-insert into allocations (case_id, amount, note, created_at) values
- ('22222222-0000-0000-0000-000000000003', 250000, 'Full NICU cost from pool — urgent', now() - interval '19 days'),
- ('22222222-0000-0000-0000-000000000001', 150000, 'Pool allocation — week 1',         now() - interval '5 days'),
- ('22222222-0000-0000-0000-000000000002', 100000, 'Pool allocation — week 1',         now() - interval '2 days');
+-- ---------- Contribution history (one row per successful debit) ----------
+insert into contributions (donor_id, unit_id, subscription_id, amount, status, charged_at, rzp_payment_id)
+select s.donor_id, s.unit_id, s.id, s.charge_amount, 'captured', g.t,
+       'pay_sample_' || substr(md5(s.id::text || g.t::text), 1, 14)
+from subscriptions s
+cross join lateral generate_series(
+  s.started_at,
+  least(coalesce(s.cancelled_at, now()), now()),
+  case s.frequency when 'monthly' then interval '1 month' when 'quarterly' then interval '3 months' else interval '1 year' end
+) as g(t);
 
--- ---------- Payout to hospital (public proof) ----------
-insert into payouts (case_id, hospital_id, amount, utr_ref, paid_at) values
- ('22222222-0000-0000-0000-000000000003', '11111111-0000-0000-0000-000000000003', 250000, 'DEMOUTR2026110100123', now() - interval '18 days');
+-- ---------- Monthly transfers: central account → unit (all months except the current one) ----------
+insert into disbursements (unit_id, amount, period_label, utr_ref, paid_at)
+select c.unit_id, sum(c.amount)::int, to_char(date_trunc('month', c.charged_at), 'FMMonth YYYY'),
+       'DEMOUTR' || to_char(date_trunc('month', c.charged_at), 'YYYYMM') || substr(c.unit_id::text, 34, 3),
+       date_trunc('month', c.charged_at) + interval '1 month 4 days'
+from contributions c
+where c.charged_at < date_trunc('month', now())
+group by c.unit_id, date_trunc('month', c.charged_at);
 
--- ---------- Updates ----------
-insert into case_updates (case_id, body_en, body_ml, created_at) values
- ('22222222-0000-0000-0000-000000000001', 'Verified by two ASHA workers after a home visit. Case is now live.', 'രണ്ട് ആശാ പ്രവർത്തകർ വീട് സന്ദർശിച്ച് സ്ഥിരീകരിച്ചു. കേസ് ഇപ്പോൾ ലൈവ് ആണ്.', now() - interval '6 days'),
- ('22222222-0000-0000-0000-000000000001', '₹1,50,000 allocated from the Kaithang pool. Surgery date fixed.', 'കൈത്താങ്ങ് പൂളിൽ നിന്ന് ₹1,50,000 അനുവദിച്ചു. ശസ്ത്രക്രിയ തീയതി നിശ്ചയിച്ചു.', now() - interval '5 days'),
- ('22222222-0000-0000-0000-000000000003', '₹2,50,000 paid directly to the hospital. Baby discharged and healthy.', '₹2,50,000 നേരിട്ട് ആശുപത്രിയിലേക്ക് നൽകി. കുഞ്ഞ് ആരോഗ്യത്തോടെ വീട്ടിലെത്തി.', now() - interval '12 days');
+-- ---------- Quarterly reports: Apr-Jun and Jul-Sep 2026 ----------
+insert into reports (unit_id, period_label, period_start, period_end, patients_served, home_visits, summary_en, summary_ml, status, submitted_at, approved_at)
+select u.id, q.label, q.s, q.e,
+       round(u.patients_registered * (0.85 + random()*0.1))::int,
+       u.home_visits_month * 3,
+       'Funds from Samhari supporters covered medicines, consumables and home visits for our registered patients this quarter. Receipts for every purchase are attached.',
+       'ഈ പാദത്തിൽ സംഹാരി പിന്തുണക്കാരിൽ നിന്നുള്ള തുക രജിസ്റ്റർ ചെയ്ത രോഗികളുടെ മരുന്നുകൾക്കും അവശ്യവസ്തുക്കൾക്കും ഗൃഹസന്ദർശനങ്ങൾക്കും ഉപയോഗിച്ചു. എല്ലാ വാങ്ങലുകളുടെയും രസീതുകൾ ചേർത്തിട്ടുണ്ട്.',
+       case when q.label = 'Jul-Sep 2026' and u.slug = 'karassery-snehasparsham' then 'submitted' else 'approved' end::report_status,
+       q.e + interval '12 days',
+       case when q.label = 'Jul-Sep 2026' and u.slug = 'karassery-snehasparsham' then null else q.e + interval '18 days' end
+from units u
+cross join (values ('Apr-Jun 2026', date '2026-04-01', date '2026-06-30'),
+                   ('Jul-Sep 2026', date '2026-07-01', date '2026-09-30')) as q(label, s, e)
+where u.status = 'approved';
 
--- =============================================================
--- STAFF ACCOUNTS — do this after creating the 3 users in
--- Supabase → Authentication → Users → "Add user" (auto-confirm):
---   admin@kaithang.demo · asha1@kaithang.demo · asha2@kaithang.demo
--- then run the block below.
--- =============================================================
--- update profiles set role = 'admin', name = 'Ignite Committee'            where email = 'admin@kaithang.demo';
--- update profiles set role = 'asha',  name = 'Sumathi K', district = 'Kozhikode' where email = 'asha1@kaithang.demo';
--- update profiles set role = 'asha',  name = 'Rejina P',  district = 'Kozhikode' where email = 'asha2@kaithang.demo';
--- update cases set assigned_asha_ids = array(select id from profiles where role = 'asha')
---   where status in ('submitted', 'under_verification');
+-- Line items ≈ 92% of what was transferred in that quarter, split by category
+insert into report_items (report_id, category, description, amount, receipt_url)
+select r.id, c.cat::spend_category, c.descr, greatest(1, round(t.total * 0.92 * c.share))::int, null
+from reports r
+join lateral (select coalesce(sum(d.amount), 0) total from disbursements d
+              where d.unit_id = r.unit_id and d.paid_at::date between r.period_start and r.period_end + 10) t on true
+cross join (values
+  ('medicines_pain_relief', 'Morphine tablets and other pain-relief medicines', 0.30),
+  ('home_care_visits',      'Home care vehicle hire and fuel for nurse visits', 0.25),
+  ('consumables',           'Adult diapers, dressings, catheters and feeding tubes', 0.20),
+  ('equipment',             'Water beds and wheelchair repairs', 0.12),
+  ('family_support',        'Monthly food kits for patient families', 0.09),
+  ('training_admin',        'Volunteer training session and phone recharge', 0.04)
+) as c(cat, descr, share)
+where t.total > 0;
 
 -- Quick check
-select * from pool_stats;
-select c.slug, c.status, t.total_raised, c.goal_amount from cases c left join case_totals t on t.case_id = c.id order by c.created_at;
+select * from platform_stats;
+select u.name, s.supporters, s.monthly_committed, s.total_received, s.total_disbursed, s.total_spent
+from units u join unit_stats s on s.unit_id = u.id order by s.total_received desc;
+
+-- =============================================================
+-- STAFF ACCOUNTS (run as a separate query, after creating these users in
+-- Authentication → Users → Add user, with Auto Confirm ticked):
+--   admin@kaithang.demo  , platform admin (Ignite committee)
+--   unit@kaithang.demo   , coordinator of Mukkam Community Palliative Care
+-- =============================================================
+-- insert into profiles (id, email, name) select id, email, split_part(email, '@', 1) from auth.users on conflict (id) do nothing;
+-- update profiles set role = 'admin', name = 'Ignite Committee' where email = 'admin@kaithang.demo';
+-- update profiles set role = 'unit', name = 'Mukkam Unit Coordinator', unit_id = 'a0000000-0000-0000-0000-000000000001' where email = 'unit@kaithang.demo';
+-- select email, role, unit_id from profiles;
